@@ -12,6 +12,7 @@ struct ContentView: View {
             searchHistoryData = (try? JSONEncoder().encode(newValue)) ?? Data()
         }
     }
+    @State private var selectedSearchTerm: String?
     @State private var tracks = [Track]()
     @State private var audioPlayer: AVPlayer?
     @State private var searchState = SearchState.none
@@ -22,13 +23,30 @@ struct ContentView: View {
     
     var body: some View {
         NavigationSplitView {
-            List(searchHistory.enumerated(), id: \.offset) { index, item in
-                Button {
-                    searchText = item
-                    startSearch()
-                } label: {
-                    Text(item)
-                }
+            List(
+                searchHistory,
+                id: \.self,
+                selection: $selectedSearchTerm
+            ) { item in
+                Text(item)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contextMenu {
+                        Button("Delete", role: .destructive) {
+                            removeFromSearchHistory(item)
+                        }
+                    }
+            }
+            .onChange(of: selectedSearchTerm, { oldValue, newValue in
+                guard let term = newValue else { return }
+                searchText = term
+                startSearch()
+            })
+            .onDeleteCommand {
+                guard let term = selectedSearchTerm else { return }
+                
+                removeFromSearchHistory(term)
+                
+                selectedSearchTerm = nil
             }
         } detail: {
             VStack {
@@ -61,6 +79,10 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    private func removeFromSearchHistory(_ term: String) {
+        searchHistory.removeAll { $0 == term }
     }
     
     private func addToSearchHistory(_ term: String) {
@@ -114,7 +136,7 @@ struct ContentView: View {
             URLQueryItem(name: "entity", value: "song")
         ]
 
-        guard let url = components.url else { return }
+        guard let url = components.url else { throw URLError(.badURL) }
 
         let (data, _) = try await URLSession.shared.data(from: url)
 
