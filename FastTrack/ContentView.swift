@@ -78,6 +78,7 @@ struct ContentView: View {
                     }
                 }
             }
+            .navigationTitle("Fast Track (\(searchHistory.count))")
         }
     }
     
