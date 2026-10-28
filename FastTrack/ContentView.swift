@@ -50,13 +50,6 @@ struct ContentView: View {
             }
         } detail: {
             VStack {
-                HStack {
-                    TextField("Search for a song", text: $searchText)
-                        .onSubmit(startSearch)
-                    Button("Search", action: startSearch)
-                }
-                .padding([.top, .horizontal])
-                
                 switch searchState {
                 case .none:
                     Text("Enter a search term to begin.")
@@ -80,6 +73,8 @@ struct ContentView: View {
             }
             .navigationTitle("Fast Track (\(searchHistory.count))")
         }
+        .searchable(text: $searchText)
+        .onSubmit(of: .search, startSearch)
     }
     
     private func removeFromSearchHistory(_ term: String) {
